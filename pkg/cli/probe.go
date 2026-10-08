@@ -36,6 +36,7 @@ type ProbeArgs struct {
 	ServerNamespaces []string
 	ServerPods       []string
 	ImageRegistry    string
+	AgnhostImage     string
 }
 
 func SetupProbeCommand() *cobra.Command {
@@ -69,6 +70,7 @@ func SetupProbeCommand() *cobra.Command {
 	command.Flags().IntVar(&args.PodCreationTimeoutSeconds, "pod-creation-timeout-seconds", 60, "number of seconds to wait for pods to create, be running and have IP addresses")
 	command.Flags().StringVar(&args.PolicyPath, "policy-path", "", "path to yaml network policy to create in kube; if empty, will not create any policies")
 	command.Flags().StringVar(&args.ImageRegistry, "image-registry", "registry.k8s.io", "Image registry for agnhost")
+	command.Flags().StringVar(&args.AgnhostImage, "agnhost-image", "", "Full agnhost image reference; overrides --image-registry when set")
 
 	return command
 }
@@ -85,7 +87,7 @@ func RunProbeCommand(args *ProbeArgs) {
 	protocols := parseProtocols(args.Protocols)
 	serverProtocols := parseProtocols(args.ServerProtocols)
 
-	resources, err := probe.NewDefaultResources(kubernetes, args.ServerNamespaces, args.ServerPods, args.ServerPorts, serverProtocols, externalIPs, args.PodCreationTimeoutSeconds, false, args.ImageRegistry)
+	resources, err := probe.NewDefaultResources(kubernetes, args.ServerNamespaces, args.ServerPods, args.ServerPorts, serverProtocols, externalIPs, args.PodCreationTimeoutSeconds, false, args.ImageRegistry, args.AgnhostImage)
 	utils.DoOrDie(err)
 
 	interpreterConfig := &connectivity.InterpreterConfig{

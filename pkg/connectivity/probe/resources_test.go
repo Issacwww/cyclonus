@@ -3,6 +3,7 @@ package probe
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
 )
 
 func RunResourcesTests() {
@@ -48,6 +49,24 @@ func RunResourcesTests() {
 
 			Expect(r.Pods[0].Labels).To(Equal(labels))
 			Expect(r2.Pods[0].Labels).To(Equal(map[string]string{}))
+		})
+
+		It("Should use a full agnhost image reference when provided", func() {
+			container := NewDefaultContainer(
+				80,
+				v1.ProtocolTCP,
+				false,
+				"registry.k8s.io",
+				"example.com/custom/repository/agnhost:2.45",
+			)
+
+			Expect(container.Image()).To(Equal("example.com/custom/repository/agnhost:2.45"))
+		})
+
+		It("Should preserve the image registry fallback", func() {
+			container := NewDefaultContainer(80, v1.ProtocolTCP, false, "registry.k8s.io", "")
+
+			Expect(container.Image()).To(Equal("registry.k8s.io/e2e-test-images/agnhost:2.43"))
 		})
 	})
 }

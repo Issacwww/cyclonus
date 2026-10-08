@@ -27,11 +27,11 @@ func NewPod(ns string, name string, labels map[string]string, ip string, contain
 	}
 }
 
-func NewDefaultPod(ns string, name string, ports []int, protocols []v1.Protocol, batchJobs bool, imageRegistry string) *Pod {
+func NewDefaultPod(ns string, name string, ports []int, protocols []v1.Protocol, batchJobs bool, imageRegistry string, agnhostImage string) *Pod {
 	var containers []*Container
 	for _, port := range ports {
 		for _, protocol := range protocols {
-			containers = append(containers, NewDefaultContainer(port, protocol, batchJobs, imageRegistry))
+			containers = append(containers, NewDefaultContainer(port, protocol, batchJobs, imageRegistry, agnhostImage))
 		}
 	}
 	return &Pod{
@@ -170,9 +170,10 @@ type Container struct {
 	PortName      string
 	BatchJobs     bool
 	ImageRegistry string
+	AgnhostImage  string
 }
 
-func NewDefaultContainer(port int, protocol v1.Protocol, batchJobs bool, imageRegistry string) *Container {
+func NewDefaultContainer(port int, protocol v1.Protocol, batchJobs bool, imageRegistry string, agnhostImage string) *Container {
 	return &Container{
 		Name:          fmt.Sprintf("cont-%d-%s", port, strings.ToLower(string(protocol))),
 		Port:          port,
@@ -180,6 +181,7 @@ func NewDefaultContainer(port int, protocol v1.Protocol, batchJobs bool, imageRe
 		PortName:      fmt.Sprintf("serve-%d-%s", port, strings.ToLower(string(protocol))),
 		BatchJobs:     batchJobs,
 		ImageRegistry: imageRegistry,
+		AgnhostImage:  agnhostImage,
 	}
 }
 
@@ -194,6 +196,9 @@ func (c *Container) KubeServicePort() v1.ServicePort {
 func (c *Container) Image() string {
 	if c.BatchJobs {
 		return cyclonusWorkerImage
+	}
+	if c.AgnhostImage != "" {
+		return c.AgnhostImage
 	}
 	return c.ImageRegistry + "/" + agnhostImage
 }
